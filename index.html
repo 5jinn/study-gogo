@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>도라에몽 공부 앱</title>
+
+<style>
+html, body {
+    margin: 0;
+    height: 100%;
+    background: white;
+}
+
+.screen {
+    display: none;
+    width: 100%;
+    height: 100vh;
+}
+
+/* 시작 */
+#start img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 400px;
+    cursor: pointer;
+}
+
+/* 메인 */
+.menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    display: flex;
+    gap: 100px;
+}
+
+.card {
+    width: 220px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.card img {
+    width: 100%;
+    border-radius: 30px;
+}
+
+.card-text {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* 뒤로가기 */
+.back {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.back img {
+    width: 60px;
+}
+
+/* 그래프 */
+#scoreCanvas {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    border: 1px solid #ccc;
+}
+
+/* 과목 버튼 */
+#subjectBtns {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+}
+
+/* 성적기입 UI */
+.entry-wrap {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+}
+
+.entry-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 5px;
+}
+
+.entry-row input {
+    width: 60px;
+}
+
+/* 삭제 리스트 */
+#deleteList {
+    margin-top: 10px;
+    display: none;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- 시작 -->
+<div id="start" class="screen">
+    <img src="Doraemon3.jpg" onclick="goMain()">
+</div>
+
+<!-- 메인 -->
+<div id="main" class="screen">
+
+<div class="back" onclick="goStart()">
+    <img src="비실이.jpg">
+    <div>뒤로가기</div>
+</div>
+
+<div class="menu">
+    <div class="card" onclick="goScore()">
+        <img src="Button12.jpg">
+        <div class="card-text">성적보기</div>
+    </div>
+
+    <div class="card" onclick="goPlan()">
+        <img src="Button21.jpg">
+        <div class="card-text">계획 세우기</div>
+    </div>
+</div>
+
+</div>
+
+<!-- 성적 -->
+<div id="score" class="screen">
+
+<div class="back" onclick="goMain()">
+    <img src="비실이.jpg">
+    <div>뒤로가기</div>
+</div>
+
+<div id="subjectBtns"></div>
+
+<canvas id="scoreCanvas" width="700" height="400"></canvas>
+
+<div class="top-btn" onclick="goEntry()"
+style="position:absolute; top:15px; right:20px; font-weight:bold; cursor:pointer;">
+성적기입
+</div>
+
+</div>
+
+<!-- 성적기입 -->
+<div id="entry" class="screen">
+
+<div class="back" onclick="goScore()">
+    <img src="비실이.jpg">
+    <div>뒤로가기</div>
+</div>
+
+<div class="entry-wrap">
+
+<button onclick="addSubject()">+ 과목 추가</button>
+<button onclick="toggleDelete()">- 과목 삭제</button>
+<button onclick="saveAll()">전체 저장</button>
+
+<div id="deleteList"></div>
+
+<div id="subjectList"></div>
+
+</div>
+
+</div>
+
+<!-- 계획 -->
+<div id="plan" class="screen">
+
+<div class="back" onclick="goMain()">
+    <img src="비실이.jpg">
+    <div>뒤로가기</div>
+</div>
+
+<textarea style="width:80%; height:60%; position:absolute; top:20%; left:10%;"></textarea>
+
+</div>
+
+<script>
+
+function show(id){
+    var s=document.getElementsByClassName("screen");
+    for(var i=0;i<s.length;i++) s[i].style.display="none";
+    document.getElementById(id).style.display="block";
+}
+
+function goMain(){show("main")}
+function goStart(){show("start")}
+function goPlan(){show("plan")}
+
+/* 데이터 */
+function getData(){
+    return JSON.parse(localStorage.getItem("scores")||"{}");
+}
+
+function saveData(d){
+    localStorage.setItem("scores", JSON.stringify(d));
+}
+
+/* 과목 추가 */
+function addSubject(){
+    var name=prompt("과목 이름");
+    if(!name) return;
+
+    var d=getData();
+    if(!d[name]) d[name]=[0,0,0,0];
+
+    saveData(d);
+    renderEntry();
+    renderScoreButtons();
+}
+
+/* 전체 저장 */
+function saveAll(){
+    var d=getData();
+    var rows=document.querySelectorAll(".entry-row");
+
+    rows.forEach(r=>{
+        var sub=r.dataset.sub;
+        var inputs=r.querySelectorAll("input");
+
+        d[sub]=[
+            Number(inputs[0].value),
+            Number(inputs[1].value),
+            Number(inputs[2].value),
+            Number(inputs[3].value)
+        ];
+    });
+
+    saveData(d);
+    alert("전체 저장 완료");
+}
+
+/* 성적 입력 UI */
+function renderEntry(){
+    var d=getData();
+    var box=document.getElementById("subjectList");
+
+    box.innerHTML="";
+
+    for(var sub in d){
+
+        var row=document.createElement("div");
+        row.className="entry-row";
+        row.dataset.sub=sub;
+
+        row.innerHTML=`
+            <div style="width:100px;">${sub}</div>
+            <input>
+            <input>
+            <input>
+            <input>
+        `;
+
+        let inputs=row.querySelectorAll("input");
+
+        inputs[0].value=d[sub][0];
+        inputs[1].value=d[sub][1];
+        inputs[2].value=d[sub][2];
+        inputs[3].value=d[sub][3];
+
+        box.appendChild(row);
+    }
+}
+
+/* 삭제 UI */
+function toggleDelete(){
+    var box=document.getElementById("deleteList");
+
+    if(box.style.display=="block"){
+        box.style.display="none";
+        return;
+    }
+
+    var d=getData();
+    box.innerHTML="";
+
+    for(let sub in d){
+        var btn=document.createElement("button");
+        btn.innerText=sub;
+
+        btn.onclick=function(){
+            var data=getData();
+            delete data[sub];
+            saveData(data);
+            renderEntry();
+            renderScoreButtons();
+            toggleDelete();
+        };
+
+        box.appendChild(btn);
+    }
+
+    box.style.display="block";
+}
+
+/* 그래프 버튼 */
+function renderScoreButtons(){
+    var d=getData();
+    var box=document.getElementById("subjectBtns");
+
+    box.innerHTML="";
+
+    for(let sub in d){
+        var btn=document.createElement("button");
+        btn.innerText=sub;
+
+        btn.onclick=function(){
+            drawGraph(sub);
+        };
+
+        box.appendChild(btn);
+    }
+}
+
+/* 그래프 */
+function drawGraph(sub){
+
+    var c=document.getElementById("scoreCanvas");
+    var ctx=c.getContext("2d");
+
+    ctx.clearRect(0,0,700,400);
+
+    var d=getData();
+    if(!d[sub]) return;
+
+    var arr=d[sub];
+
+    var labels=[
+        "1학기 중간",
+        "1학기 기말",
+        "2학기 중간",
+        "2학기 기말"
+    ];
+
+    ctx.beginPath();
+    ctx.moveTo(50,300-arr[0]*2);
+
+    for(var i=1;i<arr.length;i++){
+        ctx.lineTo(50+i*150,300-arr[i]*2);
+    }
+
+    ctx.strokeStyle="blue";
+    ctx.stroke();
+
+    for(var i=0;i<arr.length;i++){
+        ctx.fillText(labels[i],50+i*150,350);
+        ctx.fillText(arr[i],50+i*150,300-arr[i]*2-10);
+    }
+}
+
+/* 화면 이동 */
+function goScore(){
+    show("score");
+    renderScoreButtons();
+
+    var d=getData();
+    var first=Object.keys(d)[0];
+    if(first) drawGraph(first);
+}
+
+function goEntry(){
+    show("entry");
+    renderEntry();
+}
+
+show("start");
+
+</script>
+
+</body>
+</html>
