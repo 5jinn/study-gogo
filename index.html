@@ -18,7 +18,7 @@ html, body {
     height: 100vh;
 }
 
-/* 시작 화면 */
+/* 시작 */
 #start img {
     position: absolute;
     top: 50%;
@@ -116,32 +116,14 @@ html, body {
     width: 60px;
 }
 
-/* 삭제 패널 */
+/* 삭제 리스트 */
 #deleteList {
     display: none;
     margin-top: 10px;
     padding: 10px;
     border: 1px solid #ccc;
-    display: flex;
-    gap: 10px;
     flex-wrap: wrap;
-}
-
-/* 카드 버튼 스타일 */
-.ui-card {
-    width: 160px;
-    cursor: pointer;
-    text-align: center;
-}
-
-.ui-card img {
-    width: 100%;
-    border-radius: 20px;
-}
-
-.ui-card div {
-    font-weight: bold;
-    margin-top: 5px;
+    gap: 10px;
 }
 </style>
 
@@ -186,7 +168,7 @@ html, body {
 
 <div id="subjectBtns"></div>
 
-<div class="top-btn" onclick="goEntry">성적기입</div>
+<div class="top-btn" onclick="goEntry()">성적기입</div>
 
 <canvas id="scoreCanvas" width="700" height="400"></canvas>
 
@@ -202,30 +184,30 @@ html, body {
 
 <div class="entry-wrap">
 
-<!-- 버튼 3개 -->
-<div style="display:flex; gap:20px; margin-bottom:20px;">
+<!-- 텍스트 버튼 UI -->
+<div style="display:flex; gap:30px; justify-content:center; margin-bottom:20px;">
 
-<div class="ui-card" onclick="addSubject()">
-    <img src="Button12.jpg">
-    <div>과목 추가</div>
+<div onclick="addSubject()"
+style="cursor:pointer; font-size:22px; font-weight:900;">
+✏️ 과목 추가
 </div>
 
-<div class="ui-card" onclick="toggleDelete()">
-    <img src="Button21.jpg">
-    <div>과목 삭제</div>
+<div onclick="toggleDelete()"
+style="cursor:pointer; font-size:22px; font-weight:900;">
+🗑️ 과목 삭제
 </div>
 
-<div class="ui-card" onclick="saveAll()">
-    <img src="Button12.jpg">
-    <div>전체 저장</div>
+<div onclick="saveAll()"
+style="cursor:pointer; font-size:22px; font-weight:900;">
+💾 전체 저장
 </div>
 
 </div>
 
-<!-- 삭제 리스트 -->
+<!-- 삭제 영역 -->
 <div id="deleteList"></div>
 
-<!-- 입력 리스트 -->
+<!-- 입력 영역 -->
 <div id="subjectList"></div>
 
 </div>
@@ -345,15 +327,12 @@ function toggleDelete(){
 
     for(let sub in d){
 
-        var card=document.createElement("div");
-        card.className="ui-card";
+        var btn=document.createElement("div");
+        btn.style.cursor="pointer";
+        btn.style.fontWeight="bold";
+        btn.innerText=sub;
 
-        card.innerHTML=`
-            <img src="Button12.jpg">
-            <div>${sub}</div>
-        `;
-
-        card.onclick=function(){
+        btn.onclick=function(){
             var data=getData();
             delete data[sub];
             saveData(data);
@@ -362,7 +341,7 @@ function toggleDelete(){
             toggleDelete();
         };
 
-        box.appendChild(card);
+        box.appendChild(btn);
     }
 
     box.style.display="flex";
